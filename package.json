@@ -1,7 +1,7 @@
 {
   "name": "academic-aigc-hub",
   "version": "1.0.0",
-  "description": "学术搜索（中国知网 / Nature / SCI）+ AIGC 自定义 LLM 工作台",
+  "description": "学术搜索（Nature）+ AIGC 自定义 LLM 工作台（零依赖 Node.js）",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
