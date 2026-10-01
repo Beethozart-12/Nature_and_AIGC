@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学术搜索 + AIGC 工作台</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🎓</span>
+      <span>学术搜索 <b>+</b> AIGC 工作台</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="search">学术搜索</button>
+      <button class="tab" data-tab="aigc">AIGC 对话</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ 学术搜索 ============ -->
+    <section id="search" class="panel active">
+      <div class="search-box">
+        <input id="query" type="text" placeholder="输入关键词，例如：量子计算 / quantum computing" />
+        <button id="searchBtn">搜索</button>
+      </div>
+
+      <div class="hint" id="searchHint">
+        数据源：Nature（实时检索，直接返回标题、作者、年份、来源、摘要与链接）。
+      </div>
+      <div id="results" class="results"></div>
+    </section>
+
+    <!-- ============ AIGC ============ -->
+    <section id="aigc" class="panel">
+      <div class="aigc-grid">
+        <div class="aigc-config">
+          <label>AI 模型（提供商-型号）
+            <input id="providerModel" type="text" placeholder="例如：OpenAI-gpt-4o" />
+          </label>
+          <div class="parsed" id="parsedInfo"></div>
+
+          <label>API Key
+            <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+          </label>
+
+          <label>自定义 Base URL（可选，覆盖默认接口）
+            <input id="baseUrl" type="text" placeholder="https://api.openai.com/v1/chat/completions" />
+          </label>
+
+          <label>System Prompt（可选）
+            <input id="systemPrompt" type="text" placeholder="你是一个严谨的学术助手" />
+          </label>
+
+          <div class="providers-help">
+            已内置：OpenAI / DeepSeek / Moonshot(Kimi) / Qwen / Zhipu(GLM) /
+            Baichuan / MiniMax / OpenRouter / Groq / Together / Ollama / Gemini / Anthropic。
+            未知提供商请填写完整 Base URL。
+          </div>
+        </div>
+
+        <div class="aigc-chat">
+          <label>提示词
+            <textarea id="prompt" rows="6" placeholder="给 AI 的指令，例如：请总结量子计算的最新进展"></textarea>
+          </label>
+          <button id="sendBtn">发送</button>
+          <div id="aigcOutput" class="aigc-output">回复将显示在这里…</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    本地运行 · 零依赖 Node 服务 · API Key 仅用于本次请求，不在服务端存储
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

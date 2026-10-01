@@ -1,0 +1,4 @@
+node_modules/
+.learnings/
+*.log
+.DS_Store

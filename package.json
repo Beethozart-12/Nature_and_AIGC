@@ -1,0 +1,14 @@
+{
+  "name": "academic-aigc-hub",
+  "version": "1.0.0",
+  "description": "学术搜索（中国知网 / Nature / SCI）+ AIGC 自定义 LLM 工作台",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
