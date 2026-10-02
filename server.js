@@ -140,7 +140,7 @@ function parseProviderModel(s) {
   return { provider: s.slice(0, i).trim(), model: s.slice(i + 1).trim() };
 }
 
-async function callLLM({ providerModel, apiKey, baseUrl, system, prompt }) {
+async function callLLM({ providerModel, apiKey, baseUrl, system, prompt, mode }) {
   const pm = parseProviderModel(providerModel);
   if (!pm) {
     const err = new Error('AI 模型格式应为 “提供商-型号”，例如 OpenAI-gpt-4o');
@@ -155,11 +155,23 @@ async function callLLM({ providerModel, apiKey, baseUrl, system, prompt }) {
     throw err;
   }
 
+  // 降AI率模式：默认使用专门的润色系统提示词（用户自定义 system 可覆盖）
+  const HUMANIZE_SYSTEM =
+    '你是一个专业的文本润色助手。请在保持原意、专业性与事实准确性的前提下，改写用户提供的文本，' +
+    '降低其被 AI 检测工具判定为机器生成的概率（即“降AI率”）。具体要求：' +
+    '1）核心信息、数据、术语与原结论完全不变；' +
+    '2）打破过度规整的模板化表达，减少“首先/其次/最后”“综上所述”“值得注意的是”这类套路连接词；' +
+    '3）增加句式长短变化与自然过渡，适当加入更口语化、有人文气息的表达，使行文更像人类写作；' +
+    '4）不要改变文本本来的立场与语气基调（学术文本仍保持学术感）。' +
+    '直接输出改写后的完整文本，不要添加任何前言、解释、引号或“以下是改写结果”之类的多余说明。';
+  const defaultSystem = mode === 'humanize' ? HUMANIZE_SYSTEM : 'You are a helpful assistant.';
+  const sys = system && system.trim() ? system : defaultSystem;
+
   if (isAnthropic) {
     const body = {
       model: pm.model,
-      max_tokens: 1024,
-      system: system && system.trim() ? system : 'You are a helpful assistant.',
+      max_tokens: 2048,
+      system: sys,
       messages: [{ role: 'user', content: prompt }],
     };
     const r = await fetch(endpoint, {
@@ -178,7 +190,7 @@ async function callLLM({ providerModel, apiKey, baseUrl, system, prompt }) {
   const body = {
     model: pm.model,
     messages: [
-      { role: 'system', content: system && system.trim() ? system : 'You are a helpful assistant.' },
+      { role: 'system', content: sys },
       { role: 'user', content: prompt },
     ],
     temperature: 0.7,
@@ -270,6 +282,7 @@ const server = http.createServer(async (req, res) => {
             baseUrl: body.baseUrl,
             system: body.system,
             prompt: body.prompt,
+            mode: body.mode,
           });
           return sendJSON(res, 200, out);
         } catch (e) {

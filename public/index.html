@@ -54,14 +54,19 @@
           </label>
 
           <div class="providers-help">
-            已内置：OpenAI / DeepSeek / Moonshot(Kimi) / Qwen / Zhipu(GLM) /
+            已内置：OpenAI / DeepSeek / Moonshot(Kimi) / Qwen / Zhipu /
             Baichuan / MiniMax / OpenRouter / Groq / Together / Ollama / Gemini / Anthropic。
             未知提供商请填写完整 Base URL。
           </div>
         </div>
 
         <div class="aigc-chat">
-          <label>提示词
+          <div class="aigc-modes">
+            <button type="button" class="mode-btn active" data-mode="chat">对话模式</button>
+            <button type="button" class="mode-btn" data-mode="humanize">降AI率</button>
+          </div>
+          <div class="mode-hint" id="modeHint"></div>
+          <label><span id="promptLabelText">提示词</span>
             <textarea id="prompt" rows="6" placeholder="给 AI 的指令，例如：请总结量子计算的最新进展"></textarea>
           </label>
           <button id="sendBtn">发送</button>

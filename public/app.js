@@ -106,6 +106,31 @@ const sendBtn = document.getElementById('sendBtn');
 const aigcOutput = document.getElementById('aigcOutput');
 const parsedInfo = document.getElementById('parsedInfo');
 
+// 模式切换：对话 / 降AI率
+const modeButtons = document.querySelectorAll('.mode-btn');
+const modeHintEl = document.getElementById('modeHint');
+const promptLabelText = document.getElementById('promptLabelText');
+let currentMode = 'chat';
+
+function applyMode(mode) {
+  currentMode = mode;
+  modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+  if (mode === 'humanize') {
+    promptLabelText.textContent = '待降AI率的文本';
+    promptInput.placeholder = '粘贴被判定为 AI 生成的文本，发送后由模型改写为更自然的表达（保持原意）';
+    modeHintEl.textContent =
+      '降AI率：模型会在保持原意、专业性与准确性的前提下，把文本改写得更像人类写作，' +
+      '降低被 AI 检测工具识别的概率，并直接输出改写结果（无需自定义 System Prompt；若填写则覆盖默认润色指令）。';
+    modeHintEl.style.display = 'block';
+  } else {
+    promptLabelText.textContent = '提示词';
+    promptInput.placeholder = '给 AI 的指令，例如：请总结量子计算的最新进展';
+    modeHintEl.style.display = 'none';
+  }
+}
+modeButtons.forEach((b) => b.addEventListener('click', () => applyMode(b.dataset.mode)));
+applyMode('chat');
+
 function updateParsed() {
   const v = providerModelInput.value.trim();
   const i = v.indexOf('-');
@@ -153,7 +178,7 @@ async function doSend() {
     const resp = await fetch('/api/aigc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ providerModel, apiKey, baseUrl, system, prompt }),
+      body: JSON.stringify({ providerModel, apiKey, baseUrl, system, prompt, mode: currentMode }),
     });
     const data = await resp.json();
     if (!resp.ok) {

@@ -47,9 +47,10 @@
 - **自定义 Base URL**（可选）：用于自建/代理/未内置的提供商，填写完整接口地址，
   例如 `https://api.openai.com/v1/chat/completions`。
 - **System Prompt / 提示词**：按需填写后点「发送」。
+- **降AI率模式**：AIGC 面板顶部可在「对话模式」与「降AI率」之间切换。选择「降AI率」后，把被判定为 AI 生成的文本粘贴到输入框并发送，模型会在**保持原意、专业性与准确性**的前提下将其改写为更像人类写作的表达，并直接输出改写结果（无需自定义 System Prompt；若填写则覆盖默认润色指令）。
 
 ### 已内置的提供商 → 默认接口
-OpenAI、DeepSeek、Moonshot(Kimi)、Qwen、Zhipu(GLM)、Baichuan、MiniMax、
+OpenAI、DeepSeek、Moonshot(Kimi)、Qwen、Zhipu、Baichuan、MiniMax、
 OpenRouter、Groq、Together、Ollama、Gemini、Anthropic。
 未知提供商请填写完整 Base URL。
 
