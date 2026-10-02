@@ -110,7 +110,13 @@ const parsedInfo = document.getElementById('parsedInfo');
 const modeButtons = document.querySelectorAll('.mode-btn');
 const modeHintEl = document.getElementById('modeHint');
 const promptLabelText = document.getElementById('promptLabelText');
+const intensityWrap = document.getElementById('intensityWrap');
 let currentMode = 'chat';
+
+function getIntensity() {
+  const el = document.querySelector('input[name="intensity"]:checked');
+  return el ? el.value : 'standard';
+}
 
 function applyMode(mode) {
   currentMode = mode;
@@ -120,12 +126,15 @@ function applyMode(mode) {
     promptInput.placeholder = '粘贴被判定为 AI 生成的文本，发送后由模型改写为更自然的表达（保持原意）';
     modeHintEl.textContent =
       '降AI率：模型会在保持原意、专业性与准确性的前提下，把文本改写得更像人类写作，' +
-      '降低被 AI 检测工具识别的概率，并直接输出改写结果（无需自定义 System Prompt；若填写则覆盖默认润色指令）。';
+      '降低被 AI 检测工具识别的概率，并直接输出改写结果（无需自定义 System Prompt；若填写则覆盖默认润色指令）。' +
+      '请先在左侧填写“AI 模型（提供商-型号）”与“API Key”，并选择下方降AI强度。';
     modeHintEl.style.display = 'block';
+    intensityWrap.style.display = 'flex';
   } else {
     promptLabelText.textContent = '提示词';
     promptInput.placeholder = '给 AI 的指令，例如：请总结量子计算的最新进展';
     modeHintEl.style.display = 'none';
+    intensityWrap.style.display = 'none';
   }
 }
 modeButtons.forEach((b) => b.addEventListener('click', () => applyMode(b.dataset.mode)));
@@ -154,6 +163,7 @@ async function doSend() {
   const baseUrl = baseUrlInput.value.trim();
   const system = systemInput.value;
   const prompt = promptInput.value.trim();
+  const intensity = getIntensity();
 
   if (!providerModel || providerModel.indexOf('-') < 0) {
     aigcOutput.style.color = 'var(--err)';
@@ -178,12 +188,14 @@ async function doSend() {
     const resp = await fetch('/api/aigc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ providerModel, apiKey, baseUrl, system, prompt, mode: currentMode }),
+      body: JSON.stringify({ providerModel, apiKey, baseUrl, system, prompt, mode: currentMode, intensity }),
     });
     const data = await resp.json();
     if (!resp.ok) {
       aigcOutput.style.color = 'var(--err)';
       aigcOutput.textContent = '调用失败：' + (data.error || '未知错误') + '\n(请确认 提供商-型号、API Key、Base URL 是否正确)';
+    } else if (currentMode === 'humanize') {
+      renderHumanizeResult(prompt, data.text || '(空回复)', data.provider + ' / ' + data.model);
     } else {
       aigcOutput.style.color = '#dfe5ee';
       aigcOutput.textContent = '【' + data.provider + ' / ' + data.model + '】\n\n' + (data.text || '(空回复)');
@@ -194,6 +206,45 @@ async function doSend() {
   } finally {
     sendBtn.disabled = false;
   }
+}
+
+// 降AI率结果：原文 vs 改写后（使用 textContent，避免 XSS）
+function renderHumanizeResult(original, rewritten, meta) {
+  aigcOutput.style.color = '#dfe5ee';
+  aigcOutput.innerHTML = '';
+  const head = document.createElement('div');
+  head.className = 'hz-head';
+  head.textContent = '降AI率完成（' + (meta || '') + '）';
+  aigcOutput.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'hz-grid';
+
+  const colO = document.createElement('div');
+  colO.className = 'hz-col';
+  const oTitle = document.createElement('div');
+  oTitle.className = 'hz-col-title';
+  oTitle.textContent = '原文';
+  const oBody = document.createElement('div');
+  oBody.className = 'hz-col-body';
+  oBody.textContent = original;
+  colO.appendChild(oTitle);
+  colO.appendChild(oBody);
+
+  const colR = document.createElement('div');
+  colR.className = 'hz-col';
+  const rTitle = document.createElement('div');
+  rTitle.className = 'hz-col-title';
+  rTitle.textContent = '改写后';
+  const rBody = document.createElement('div');
+  rBody.className = 'hz-col-body';
+  rBody.textContent = rewritten;
+  colR.appendChild(rTitle);
+  colR.appendChild(rBody);
+
+  grid.appendChild(colO);
+  grid.appendChild(colR);
+  aigcOutput.appendChild(grid);
 }
 
 sendBtn.addEventListener('click', doSend);

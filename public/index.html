@@ -66,6 +66,12 @@
             <button type="button" class="mode-btn" data-mode="humanize">降AI率</button>
           </div>
           <div class="mode-hint" id="modeHint"></div>
+          <div class="intensity-wrap" id="intensityWrap" style="display:none">
+            <span class="intensity-label">降AI强度：</span>
+            <label class="intensity-opt"><input type="radio" name="intensity" value="light" /> 轻度</label>
+            <label class="intensity-opt"><input type="radio" name="intensity" value="standard" checked /> 标准</label>
+            <label class="intensity-opt"><input type="radio" name="intensity" value="heavy" /> 重度</label>
+          </div>
           <label><span id="promptLabelText">提示词</span>
             <textarea id="prompt" rows="6" placeholder="给 AI 的指令，例如：请总结量子计算的最新进展"></textarea>
           </label>

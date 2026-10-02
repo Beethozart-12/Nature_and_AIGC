@@ -140,7 +140,7 @@ function parseProviderModel(s) {
   return { provider: s.slice(0, i).trim(), model: s.slice(i + 1).trim() };
 }
 
-async function callLLM({ providerModel, apiKey, baseUrl, system, prompt, mode }) {
+async function callLLM({ providerModel, apiKey, baseUrl, system, prompt, mode, intensity }) {
   const pm = parseProviderModel(providerModel);
   if (!pm) {
     const err = new Error('AI 模型格式应为 “提供商-型号”，例如 OpenAI-gpt-4o');
@@ -155,16 +155,31 @@ async function callLLM({ providerModel, apiKey, baseUrl, system, prompt, mode })
     throw err;
   }
 
-  // 降AI率模式：默认使用专门的润色系统提示词（用户自定义 system 可覆盖）
-  const HUMANIZE_SYSTEM =
-    '你是一个专业的文本润色助手。请在保持原意、专业性与事实准确性的前提下，改写用户提供的文本，' +
-    '降低其被 AI 检测工具判定为机器生成的概率（即“降AI率”）。具体要求：' +
-    '1）核心信息、数据、术语与原结论完全不变；' +
-    '2）打破过度规整的模板化表达，减少“首先/其次/最后”“综上所述”“值得注意的是”这类套路连接词；' +
-    '3）增加句式长短变化与自然过渡，适当加入更口语化、有人文气息的表达，使行文更像人类写作；' +
-    '4）不要改变文本本来的立场与语气基调（学术文本仍保持学术感）。' +
-    '直接输出改写后的完整文本，不要添加任何前言、解释、引号或“以下是改写结果”之类的多余说明。';
-  const defaultSystem = mode === 'humanize' ? HUMANIZE_SYSTEM : 'You are a helpful assistant.';
+  // 降AI率模式：依据强度使用专门的润色系统提示词（用户自定义 system 可覆盖）
+  function buildHumanizeSystem(intensity) {
+    const base =
+      '你是一个专业的文本润色助手。请在保持原意、专业性与事实准确性的前提下，改写用户提供的文本，' +
+      '降低其被 AI 检测工具判定为机器生成的概率（即“降AI率”）。硬性要求：' +
+      '1）核心信息、数据、术语与原结论完全不变；' +
+      '2）不要改变文本本来的立场与语气基调（学术文本仍保持学术感）；' +
+      '3）直接输出改写后的完整文本，不要添加任何前言、解释、引号或“以下是改写结果”之类的多余说明。';
+    const levels = {
+      light:
+        base +
+        ' 请做轻度润色：仅剔除明显套路的连接词（如“首先/其次/最后”“综上所述”“值得注意的是”“毋庸置疑”等），' +
+        '适当让句式更自然，整体结构基本不动。',
+      standard:
+        base +
+        ' 请做标准润色：打破过度规整的模板化表达，减少套路连接词；增加句式长短变化与自然过渡，' +
+        '适当加入更口语化、有人文气息的表达，使行文更像人类写作，同时保持可读性与逻辑。',
+      heavy:
+        base +
+        ' 请做深度润色：大幅调整句式与节奏，打破清单式/总分总等机械结构；用更自然、带个人语感的表达替换生硬书面语；' +
+        '引入合理的过渡与细节铺陈，使文本读起来像出自真人手笔，但绝不歪曲事实或数据。',
+    };
+    return levels['' + intensity] || levels.standard;
+  }
+  const defaultSystem = mode === 'humanize' ? buildHumanizeSystem(intensity) : 'You are a helpful assistant.';
   const sys = system && system.trim() ? system : defaultSystem;
 
   if (isAnthropic) {
@@ -283,6 +298,7 @@ const server = http.createServer(async (req, res) => {
             system: body.system,
             prompt: body.prompt,
             mode: body.mode,
+            intensity: body.intensity,
           });
           return sendJSON(res, 200, out);
         } catch (e) {
